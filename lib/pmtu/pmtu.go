@@ -3,6 +3,7 @@ package pmtu
 
 import (
 	"fmt"
+	"runtime"
 )
 
 
@@ -40,7 +41,8 @@ type pmtu struct {
 // USAGE: call pmtu.PmtuTestHarness()
 //
 func PmtuTestHarness() {
-	result := DetectPmtu("127.0.0.1")
+	resultChan := DetectPmtuAsync("127.0.0.1")
+	result := <- resultChan
 	fmt.Println(result.pmtu)
 	fmt.Println(result.err)
 }
@@ -77,7 +79,8 @@ func DetectPmtu(hostname string, expectedPmtu ...uint) pmtu {
 // -expectedPmtu : uint (optional) defines the expected PMTU, if known.  If correct, the testing will be sped up considerably.  Default = 1500.
 //
 func DetectPmtuAsync(hostname string) chan pmtu {
-	var resultChan chan pmtu
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	resultChan := make(chan pmtu)
 	go detectPmtuAsync(resultChan, hostname)
 	return resultChan
 }

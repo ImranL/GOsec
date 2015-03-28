@@ -3,7 +3,6 @@ package pmtu
 
 import (
 	"fmt"
-	"runtime"
 )
 
 
@@ -22,11 +21,22 @@ import (
 
 
 //
+// Calls to this library are made with this struct.  Hostname is required, all other variables are optional.
+//
+type PmtuTest struct {
+	Hostname string
+	ExpectedPmtu uint
+}
+
+
+
+
+//
 // Path MTU tests either result in a pmtu value or an error string in this struct
 //
-type pmtu struct {
-	pmtu uint
-	err string
+type PmtuResult struct {
+	Pmtu uint
+	Err string
 }
 
 
@@ -41,10 +51,12 @@ type pmtu struct {
 // USAGE: call pmtu.PmtuTestHarness()
 //
 func PmtuTestHarness() {
-	resultChan := DetectPmtuAsync("127.0.0.1")
+	var test PmtuTest
+	test.Hostname = "127.0.0.1"
+	resultChan := DetectPmtuAsync(test)
 	result := <- resultChan
-	fmt.Println(result.pmtu)
-	fmt.Println(result.err)
+	fmt.Println(result.Pmtu)
+	fmt.Println(result.Err)
 }
 
 
@@ -54,13 +66,13 @@ func PmtuTestHarness() {
 // Detect path MTU and return result synchronously
 // ===============================================
 //
-// USAGE: result := pmtu.DetectPmtu(hostname, expectedPmtu)
+// USAGE: result := pmtu.DetectPmtu(inputTest)
 //
-// -hostname : string (required) is a valid hostname or a valid ipv4/ipv6 address.
-// -expectedPmtu : uint (optional) defines the expected PMTU, if known.  If correct, the testing will be sped up considerably.  Default = 1500.
+// -inputTest : PmtuTest (see struct definition above)
+// -result : PmtuResult (see struct definition above)
 // 
-func DetectPmtu(hostname string, expectedPmtu ...uint) pmtu {
-	var result pmtu
+func DetectPmtu(test PmtuTest) PmtuResult {
+	var result PmtuResult
 	return result
 }
 
@@ -71,17 +83,16 @@ func DetectPmtu(hostname string, expectedPmtu ...uint) pmtu {
 // Detect path MTU and return result asynchronously
 //
 // USAGE:
-//	resultChan := pmtu.DetectPmtuAsync(hostname, expectedPmtu)
+//	resultChan := pmtu.DetectPmtuAsync(inputTest)
 //	<other code>
 //	result := <- resultChan
 //
-// -hostname : string (required) is a valid hostname or a valid ipv4/ipv6 address.
-// -expectedPmtu : uint (optional) defines the expected PMTU, if known.  If correct, the testing will be sped up considerably.  Default = 1500.
+// -inputTest : PmtuTest (see struct definition above)
+// -result : PmtuResult (see struct definition above)
 //
-func DetectPmtuAsync(hostname string) chan pmtu {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	resultChan := make(chan pmtu)
-	go detectPmtuAsync(resultChan, hostname)
+func DetectPmtuAsync(test PmtuTest) chan PmtuResult {
+	resultChan := make(chan PmtuResult)
+	go detectPmtuAsync(resultChan, test)
 	return resultChan
 }
 
@@ -91,7 +102,7 @@ func DetectPmtuAsync(hostname string) chan pmtu {
 //
 // -=PRIVATE=- Asynchronously return PMTU test results
 //
-func detectPmtuAsync(resultChan chan pmtu, hostname string) {
-	resultChan <- DetectPmtu(hostname)
+func detectPmtuAsync(resultChan chan PmtuResult, test PmtuTest) {
+	resultChan <- DetectPmtu(test)
 }
 

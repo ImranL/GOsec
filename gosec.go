@@ -7,5 +7,7 @@ import (
 
 func main() {
 	fmt.Println("Hello World v2!")
-	pmtu.TestPmtu()
+
+	// test PMTU library:
+	pmtu.PmtuTestHarness()
 }

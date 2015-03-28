@@ -3,6 +3,7 @@ package pmtu
 
 import (
 	"fmt"
+	"net"
 )
 
 
@@ -26,17 +27,20 @@ import (
 type PmtuTest struct {
 	Hostname string
 	ExpectedPmtu uint
+	IcmpTimeoutMS uint
 }
 
 
 
 
 //
-// Path MTU tests either result in a pmtu value or an error string in this struct
+// Path MTU tests either result in a pmtu value or an error string for IPv4 and IPv6 in this struct
 //
 type PmtuResult struct {
-	Pmtu uint
-	Err string
+	Pmtu4 uint
+	Pmtu6 uint
+	Err4 string
+	Err6 string
 }
 
 
@@ -52,11 +56,10 @@ type PmtuResult struct {
 //
 func PmtuTestHarness() {
 	var test PmtuTest
-	test.Hostname = "127.0.0.1"
+	test.Hostname = "google.com"
 	resultChan := DetectPmtuAsync(test)
 	result := <- resultChan
-	fmt.Println(result.Pmtu)
-	fmt.Println(result.Err)
+	fmt.Println(result.Pmtu4, result.Pmtu6, result.Err4, result.Err6)
 }
 
 
@@ -73,6 +76,21 @@ func PmtuTestHarness() {
 // 
 func DetectPmtu(test PmtuTest) PmtuResult {
 	var result PmtuResult
+	ips, err := net.LookupIP(test.Hostname)
+	if err != nil {
+		result.Err4 = "Hostname lookup failure"
+		result.Err6 = "Hostname lookup failure"
+		return result
+	}
+	var ip4, ip6 net.IP
+	for i := 0; i < len(ips); i++ {
+		if ips[i].To4() != nil {
+			ip4 = ips[i]
+		} else {
+			ip6 = ips[i]
+		}
+	}
+fmt.Println(ip4, ip6, err)
 	return result
 }
 

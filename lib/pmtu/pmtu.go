@@ -40,7 +40,7 @@ type pmtu struct {
 // USAGE: call pmtu.PmtuTestHarness()
 //
 func PmtuTestHarness() {
-	result := DetectPmtuAsync("127.0.0.1")
+	result := DetectPmtu("127.0.0.1")
 	fmt.Println(result.pmtu)
 	fmt.Println(result.err)
 }

@@ -99,7 +99,7 @@ func DetectPmtu(test PmtuTest) PmtuResult {
 fmt.Println(ip4, ip6)
 
 	// Ping the host, check that we can get to it with minimally-sized ping.  Simultaneously ping with the expected PMTU if set.
-	conn, err := net.Dial("ip4:icmp", ip4)
+	conn, err := net.Dial("ip4:icmp", ip4.String())
 	if err != nil {
 		result.Err4 = "blah"
 		result.Err6 = "blah"
@@ -118,11 +118,11 @@ fmt.Println(ip4, ip6)
 	msg[5] = id2
 	msg[6] = 0
 	msg[7] = 1
-	check := CheckSum(msg[0:len])
+	check := CheckSum(msg[0:8])
 	msg[2] = byte(check >> 8)
 	msg[3] = byte(check & 0xff)
-	conn.SetDeadline(time.Second)
-	if _, err = conn.Write(msg[0:len]); err != nil {
+	conn.SetDeadline(time.Now().Add(time.Second))
+	if _, err = conn.Write(msg[0:8]); err != nil {
 		result.Err4 = "blah2"
 		result.Err6 = "blah2"
 		return result
@@ -135,6 +135,27 @@ fmt.Println(ip4, ip6)
 	fmt.Println(msg)
 
 	return result
+}
+
+
+
+
+func CheckSum(buf []byte) uint16 {
+	var sum int32
+	n := len(buf)
+	if len(buf) % 2 != 0 {
+		n--
+	}
+	for i := 0; i < n; i += 2 {
+		sum += int32(buf[i]) << 8 + int32(buf[i+1])
+	}
+	if len(buf) % 2 != 0 {
+		sum += int32(buf[n])
+	}
+	sum = (sum >> 16) + (sum & 0xffff)
+	sum += (sum >> 16)
+	var ans uint16 = uint16(^sum)
+	return ans
 }
 
 

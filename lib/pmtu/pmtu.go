@@ -109,20 +109,20 @@ fmt.Println(ip4, ip6)
 	pid := os.Getpid()
 	var id1 = byte(pid & 0xff00 >> 8)
 	var id2 = byte(pid & 0xff)
-	var msg [64]byte
-	msg[0] = 8
-	msg[1] = 0
-	msg[2] = 0
-	msg[3] = 0
-	msg[4] = id1
-	msg[5] = id2
-	msg[6] = 0
-	msg[7] = 1
+	var msg [1800]byte
+	msg[0] = 8		// Echo request
+	msg[1] = 0		// Always 0 for Echo request
+	msg[2] = 0		// To be checksum most significant byte
+	msg[3] = 0		// To be checksum least significant byte
+	msg[4] = id1		// Identifier most significant byte
+	msg[5] = id2		// Identifier least significant byte
+	msg[6] = 0		// Sequence most significant byte
+	msg[7] = 1		// Sequence least significant byte
 	check := CheckSum(msg[0:8])
 	msg[2] = byte(check >> 8)
 	msg[3] = byte(check & 0xff)
 	conn.SetDeadline(time.Now().Add(time.Second))
-	if _, err = conn.Write(msg[0:8]); err != nil {
+	if _, err = conn.Write(msg[0:1474]); err != nil {
 		result.Err4 = "blah2"
 		result.Err6 = "blah2"
 		return result
@@ -132,7 +132,7 @@ fmt.Println(ip4, ip6)
 		result.Err6 = "blah3"
 		return result
 	}
-	fmt.Println(msg)
+fmt.Println(msg)
 
 	return result
 }

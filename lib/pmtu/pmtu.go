@@ -59,7 +59,7 @@ func PmtuTestHarness() {
 	test.Hostname = "google.com"
 	resultChan := DetectPmtuAsync(test)
 	result := <- resultChan
-	fmt.Println(result.Pmtu4, result.Pmtu6, result.Err4, result.Err6)
+fmt.Println(result.Pmtu4, result.Pmtu6, result.Err4, result.Err6)
 }
 
 

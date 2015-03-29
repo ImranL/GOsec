@@ -75,7 +75,11 @@ func PmtuTestHarness() {
 // -result : PmtuResult (see struct definition above)
 // 
 func DetectPmtu(test PmtuTest) PmtuResult {
+
+	// Set up results container
 	var result PmtuResult
+
+	// Look up hostname, record v4 and/or v6 records.  Fail out if the lookup isn't successful.
 	ips, err := net.LookupIP(test.Hostname)
 	if err != nil {
 		result.Err4 = "Hostname lookup failure"
@@ -90,7 +94,11 @@ func DetectPmtu(test PmtuTest) PmtuResult {
 			ip6 = ips[i]
 		}
 	}
-fmt.Println(ip4, ip6, err)
+fmt.Println(ip4, ip6)
+
+	// Ping the host, check that we can get to it with minimally-sized ping.  Simultaneously ping with the expected PMTU if set.
+	
+
 	return result
 }
 

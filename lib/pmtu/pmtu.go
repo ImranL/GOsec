@@ -4,6 +4,8 @@ package pmtu
 import (
 	"fmt"
 	"net"
+	"os"
+	"time"
 )
 
 
@@ -97,7 +99,40 @@ func DetectPmtu(test PmtuTest) PmtuResult {
 fmt.Println(ip4, ip6)
 
 	// Ping the host, check that we can get to it with minimally-sized ping.  Simultaneously ping with the expected PMTU if set.
-	
+	conn, err := net.Dial("ip4:icmp", ip4)
+	if err != nil {
+		result.Err4 = "blah"
+		result.Err6 = "blah"
+		return result
+	}
+	defer conn.Close()
+	pid := os.Getpid()
+	var id1 = byte(pid & 0xff00 >> 8)
+	var id2 = byte(pid & 0xff)
+	var msg [64]byte
+	msg[0] = 8
+	msg[1] = 0
+	msg[2] = 0
+	msg[3] = 0
+	msg[4] = id1
+	msg[5] = id2
+	msg[6] = 0
+	msg[7] = 1
+	check := CheckSum(msg[0:len])
+	msg[2] = byte(check >> 8)
+	msg[3] = byte(check & 0xff)
+	conn.SetDeadline(time.Second)
+	if _, err = conn.Write(msg[0:len]); err != nil {
+		result.Err4 = "blah2"
+		result.Err6 = "blah2"
+		return result
+	}
+	if _, err = conn.Read(msg[0:]); err != nil {
+		result.Err4 = "blah3"
+		result.Err6 = "blah3"
+		return result
+	}
+	fmt.Println(msg)
 
 	return result
 }
